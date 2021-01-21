@@ -11,7 +11,7 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 
-// 227 Geolocation API from browser + // 228 Displaying a Map Using Leaflet Library
+// 227 Geolocation API from browser + 228 Displaying a Map Using Leaflet Library
 if (navigator.geolocation) // check for older browser if it has this API;
     navigator.geolocation.getCurrentPosition(function (position) {
         const { latitude, longitude } = position.coords;
@@ -26,9 +26,24 @@ if (navigator.geolocation) // check for older browser if it has this API;
             attribution: `&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors`
         }).addTo(map);
 
-        L.marker([latitude, longitude]).addTo(map)
-            .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
-            .openPopup();
+
+
+        map.on('click', function (mapEvent) {
+            console.log(mapEvent);
+            const { lat, lng } = mapEvent.latlng;
+
+            L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup(L.popup({
+                    autoClose: false,
+                    maxWidth: 250,
+                    minWidth: 100,
+                    closeOnClick: false,
+                    className: 'running-popup',
+                })
+                ).setPopupContent('Workout')
+                .openPopup()
+        })
 
     }, // first function when the data is going to be successfully fetched
         function () {
