@@ -73,8 +73,16 @@ class App {
     #mapZoomLevel = 13;
     #workouts = [] //class field
     constructor() {
+
         // this.workouts = []; // old way
+        //
+        // get user's position
         this._getPosition();
+
+        //get data from local storage
+        this._getLocalStorage();
+
+        //attach event handlers
         form.addEventListener('submit', this._newWorkout.bind(this));
         inputType.addEventListener('change', this._toggleElevationField);
         containerWorkouts.addEventListener('click', this._moveToPopup.bind(this))
@@ -107,6 +115,11 @@ class App {
 
         //handling clicks on map
         this.#map.on('click', this._showForm.bind(this));
+
+        this.#workouts.forEach(work => {
+            this._renderWorkoutMarker(work);
+
+        })
     }
 
     _showForm(mapE) {
@@ -151,7 +164,7 @@ class App {
                 !allPositive(distance, duration, cadence))
                 return alert('Inputs have to be positive number!')
             workout = new Running([lat, lng], distance, duration, cadence);
-            this.#workouts.push(workout);
+            // this.#workouts.push(workout);
         }
         //if workout cycling, create cycling obj.
         if (type === 'cycling') {
@@ -179,10 +192,12 @@ class App {
 
         this._hideForm()
 
+        // Set local storage to all workouts
+        this._setLocalStorage();
+
     }
 
     _renderWorkoutMarker(workout) {
-        console.log(workout)
         L.marker(workout.coords)
             .addTo(this.#map)
             .bindPopup(L.popup({
@@ -248,7 +263,6 @@ class App {
     }
     _moveToPopup(e) {
         const workoutEl = e.target.closest('.workout');
-        console.log(workoutEl)
         if (!workoutEl) return;
 
         const workout = this.#workouts.find(work => work.id === workoutEl.dataset.id);
@@ -261,7 +275,28 @@ class App {
             }
         })
         //using the public interface
-        workout.click();
+        // workout.click();
+    }
+
+    //!IMPORTANT
+    // BUG - reconstruct classes type - running jogging workout - prototype chain
+    _setLocalStorage() {
+        localStorage.setItem('workouts', JSON.stringify(this.#workouts))
+    }
+
+    _getLocalStorage() {
+        const data = JSON.parse(localStorage.getItem('workouts'));
+        if (!data) return;
+        this.#workouts = data;
+
+        this.#workouts.forEach(work => {
+            this._renderWorkout(work);
+        })
+    }
+    //method for console - temporary solution
+    reset() {
+        localStorage.removeItem('workouts');
+        location.reload();
     }
 }
 
