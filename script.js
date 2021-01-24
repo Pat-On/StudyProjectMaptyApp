@@ -13,8 +13,8 @@ const inputElevation = document.querySelector('.form__input--elevation');
 class Workout {
     // newest solution which are not yet part 
     date = new Date();
-    id = (Date.now() + '').slice(-10) // pseudo id
-
+    id = (Date.now() + '').slice(-10); // pseudo id
+    clicks = 0;
     constructor(coords, distance, duration) {
         // this.date = ... normal solution -> implement it after
         // this.id = ...
@@ -27,6 +27,10 @@ class Workout {
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         this.description = `${this.type[0].toUpperCase()}${this.type.slice(1)} on ${months[this.date.getMonth()]} ${this.date.getDate()}`
     };
+
+    click() {
+        this.clicks++;
+    }
 }
 
 class Running extends Workout {
@@ -66,12 +70,14 @@ class App {
     // implement it in different way to make it work with ES 6
     #map;
     #mapEvent;
+    #mapZoomLevel = 13;
     #workouts = [] //class field
     constructor() {
         // this.workouts = []; // old way
         this._getPosition();
         form.addEventListener('submit', this._newWorkout.bind(this));
         inputType.addEventListener('change', this._toggleElevationField);
+        containerWorkouts.addEventListener('click', this._moveToPopup.bind(this))
     }
 
     _getPosition() {
@@ -92,7 +98,7 @@ class App {
         // console.log(`https://www.google.com/maps/@${latitude},${longitude}`)
         //we need in our html element with the id map - empty div for example 
         //L = is the main function - like namespace 
-        this.#map = L.map('map').setView([latitude, longitude], 13);
+        this.#map = L.map('map').setView([latitude, longitude], this.#mapZoomLevel);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: `&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors`
@@ -113,7 +119,7 @@ class App {
         inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value = '';
         form.style.display = 'none';
         form.classList.add('hidden');
-        setTimeout(() => form.style.display = 'grid', 1000)
+        setTimeout(() => form.style.display = 'grid', 1000) // nice
     }
 
     _toggleElevationField() {
@@ -240,7 +246,23 @@ class App {
 
         form.insertAdjacentHTML('afterend', html);
     }
+    _moveToPopup(e) {
+        const workoutEl = e.target.closest('.workout');
+        console.log(workoutEl)
+        if (!workoutEl) return;
 
+        const workout = this.#workouts.find(work => work.id === workoutEl.dataset.id);
+        console.log(workout)
+
+        this.#map.setView(workout.coords, this.#mapZoomLevel, {
+            animate: true,
+            pan: {
+                duration: 1
+            }
+        })
+        //using the public interface
+        workout.click();
+    }
 }
 
 const app = new App();
